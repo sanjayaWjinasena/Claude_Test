@@ -1,0 +1,32 @@
+# ============================================================
+# DO NOT COMMIT THESE — proprietary / sensitive
+# ============================================================
+
+# Odoo Enterprise source (OPL license — clone separately)
+enterprise/
+
+# Third-party modules (download separately per SELFHOST_SETUP.md)
+third_party/
+
+# Local environment variables (contains passwords)
+.env
+
+# Odoo filestore / uploads
+filestore/
+*.dump
+*.zip
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# macOS
+.DS_Store
+
+# Editor
+.vscode/
+.idea/
+*.swp

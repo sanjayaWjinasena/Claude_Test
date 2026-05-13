@@ -1,0 +1,63 @@
+version: '3.8'
+
+# ============================================================
+# Jinasena Clear_DB — Odoo 17 Enterprise Self-Host Setup
+# ============================================================
+# BEFORE STARTING:
+#   1. Clone Odoo Enterprise into ./enterprise/
+#      git clone https://github.com/odoo/enterprise.git --branch 17.0 --depth 1 enterprise
+#   2. Place third-party modules into ./third_party/  (see SELFHOST_SETUP.md)
+#   3. Copy .env.example → .env and fill in your values
+#   4. See SELFHOST_SETUP.md for full instructions
+# ============================================================
+
+services:
+
+  db:
+    image: postgres:15
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: ${DB_USER:-odoo}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-odoo}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-odoo}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  odoo:
+    image: odoo:17.0
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${ODOO_PORT:-8069}:8069"
+      - "${ODOO_CHAT_PORT:-8072}:8072"
+    volumes:
+      # Odoo data (filestore, sessions)
+      - odoo_data:/var/lib/odoo
+      # Config file
+      - ./docker/config/odoo.conf:/etc/odoo/odoo.conf:ro
+      # Odoo Enterprise addons (clone from github.com/odoo/enterprise — see SELFHOST_SETUP.md)
+      - ./enterprise:/mnt/enterprise-addons:ro
+      # Third-party addons (OCA, Probuse, BROWSEINFO, Cybrosys, etc.)
+      - ./third_party:/mnt/third-party-addons:ro
+      # Custom addons (this repo — studio_customization, jinasena_helpdesk_repair, etc.)
+      - .:/mnt/extra-addons:ro
+    environment:
+      HOST: db
+      PORT: 5432
+      USER: ${DB_USER:-odoo}
+      PASSWORD: ${DB_PASSWORD:-odoo}
+    command: odoo --config /etc/odoo/odoo.conf
+
+volumes:
+  postgres_data:
+  odoo_data:
